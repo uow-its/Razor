@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -u
+set -e
+
+function install_puppet() {
+    curl <%= @options[:package_url] %> | tar -C /tmp -xz
+
+    cat >/tmp/puppet.answer <<EOFPUPPETANSWER
+q_install=y
+q_puppet_cloud_install=n
+q_puppet_enterpriseconsole_install=n
+q_puppet_symlinks_install=y
+q_puppetagent_certname=$(hostname -f)
+q_puppetagent_install=y
+q_puppetagent_server=<%= @options[:server] %>
+q_fail_on_unsuccessful_master_lookup=n
+q_puppetmaster_install=n
+q_vendor_packages_install=y
+q_puppet_agent_first_run=n
+EOFPUPPETANSWER
+
+    /tmp/puppet-enterprise-*/puppet-enterprise-installer -a /tmp/puppet.answer
+}
+
+function run_agent() {
+    puppet agent -t
+}
+
+#This fuction is not called if no custom facts are given
+function facts_dot_d() {
+    mkdir -p /etc/puppetlabs/facter/facts.d
+    <% if @options[:metadata] %> echo Installing custom facts
+        <% @options[:metadata].each do |fact,value| %> echo '<%= fact %>=<%= value %>' > /etc/puppetlabs/facter/facts.d/<%= fact %>.txt
+    <% end %> <% end %>
+}
+
+function provision_puppet() {
+    install_puppet
+    <%= 'facts_dot_d' if @options[:metadata] %>
+    run_agent
+    echo Puppet Enterprise installation finished!
+    exit 0
+}
+
+provision_puppet
