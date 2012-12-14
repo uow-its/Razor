@@ -18,14 +18,47 @@ module ProjectRazor::BrokerPlugin
       @description = "PuppetLabs Puppet Enterprise"
       @hidden = false
       from_hash(hash) if hash
+      @req_metadata_hash = {
+        "@server" => {
+          :default      => "",
+          :example      => "puppet.example.com",
+          :validation   => '(^$|^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$)',
+          :required     => false,
+          :description  => "Hostname of Puppet Master; optional"
+        },
+        "@package_url" => {
+          :default      => "",
+          :example      => "http://example.com/puppet-enterprise.tar.gz",
+          :validation   => URI::DEFAULT_PARSER.regexp[:ABS_URI].to_s,
+          :required     => true,
+          :description  => "the URL where the Puppet Enterprise package can be downloaded from."
+        }
+      }
+
+    end
+
+
+    def print_item_header
+      if @is_template
+        return "Plugin", "Description"
+      else
+        return "Name", "Description", "Plugin", "UUID", "Server", "Package URL"
+      end
+    end
+
+    def print_item
+      if @is_template
+        return @plugin.to_s, @description.to_s
+      else
+        return @name, @user_description, @plugin.to_s, @uuid, @server, @package_url
+      end
     end
 
     def agent_hand_off(options = {})
       @options = options
-      @options[:server] = @servers.first
-      @options[:version] = @broker_version
-      @options[:package_url] = @servers[1] # second server will be the package URL
-      return false unless validate_options(@options, [:username, :password, :server, :ca_server, :puppetagent_certname, :ipaddress, :package_url])
+      @options[:server] = @server
+      @options[:package_url] = @package_url
+      return false unless validate_options(@options, [:username, :password, :server, :package_url])
       @puppet_script = compile_template
       init_agent(options)
     end
@@ -73,7 +106,6 @@ module ProjectRazor::BrokerPlugin
       ret
     end
 
-
     def compile_template
       logger.debug "Compiling template"
       install_script = File.join(File.dirname(__FILE__), "puppetenterprise/agent_install.erb")
@@ -93,5 +125,6 @@ module ProjectRazor::BrokerPlugin
       end
       true
     end
+
   end
 end
