@@ -3,6 +3,7 @@
 # TODO - Make broker properties open rather than rigid
 require "erb"
 require "net/ssh"
+require 'uri'
 
 # Root namespace for ProjectRazor
 module ProjectRazor::BrokerPlugin
