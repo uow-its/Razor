@@ -1,6 +1,6 @@
 #!/bin/bash
-# Kickstart for RHEL/CentOS 6
-# see: http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Installation_Guide/s1-kickstart2-options.html
+# Kickstart for RHEL/CentOS 5 
+# see: http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Installation_Guide/s1-kickstart2-options.html
 
 install
 url --url=http://<%= config.image_svc_host %>:<%= config.image_svc_port %>/razor/image/os/<%= @image_uuid %>
@@ -9,8 +9,8 @@ lang en_US.UTF-8
 keyboard us
 rootpw <%= @root_password %>
 network --hostname <%= hostname %>
-firewall --service=ssh
-authconfig --enableshadow --passalgo=sha512 --enablefingerprint
+firewall --enable --ssh
+authconfig --enableshadow --passalgo=sha512
 selinux --disabled
 timezone --utc America/Denver
 bootloader --location=mbr --driveorder=sda --append=crashkernel=auto rhgb quiet
@@ -18,7 +18,6 @@ bootloader --location=mbr --driveorder=sda --append=crashkernel=auto rhgb quiet
 # Note that any partitions you deleted are not expressed
 # here so unless you clear all partitions first, this is
 # not guaranteed to work
-zerombr
 clearpart --all --initlabel
 autopart
 # reboot automatically
@@ -28,7 +27,6 @@ reboot
 %packages --nobase
 @core
 
-%end
 
 %post --log=/root/razor-post.log
 cd /root
