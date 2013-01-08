@@ -30,7 +30,7 @@ module ProjectRazor::BrokerPlugin
         "@package_url" => {
           :default      => "",
           :example      => "http://example.com/puppet-enterprise.tar.gz",
-          :validation   => URI::DEFAULT_PARSER.regexp[:ABS_URI].to_s,
+          :validation   => URI::regexp.to_s,
           :required     => true,
           :description  => "the URL where the Puppet Enterprise package can be downloaded from."
         }
